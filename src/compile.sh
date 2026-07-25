@@ -15,19 +15,19 @@ ghdl -a hex_to_sseg.vhd
 echo "Analyzing disp_mux.vhd..."
 ghdl -a disp_mux.vhd
  
-# 2. Analyze the top-level design
-echo "Analyzing fp_adder_test.vhd..."
-ghdl -a fp_adder_test.vhd
+# 2. Analyze the testbench
+echo "Analyzing tb_fp_adder.vhd..."
+ghdl -a tb_fp_adder.vhd
 
-# 3. Elaborate the top-level entity
-echo "Elaborating the top-level entity (fp_adder_test)..."
-ghdl -e fp_adder_test
+# 3. Elaborate the testbench entity
+echo "Elaborating the testbench (tb_fp_adder)..."
+ghdl -e tb_fp_adder
 
-echo "Compilation successful! Executable 'fp_adder_test' has been generated."
+echo "Compilation successful! Executable 'tb_fp_adder' has been generated."
 
 # 4. Run the simulation and generate a VCD waveform file
 echo "Running simulation..."
-ghdl -r fp_adder_test --vcd=wave.vcd
+ghdl -r tb_fp_adder --vcd=wave.vcd --stop-time=100ns
 
 # 5. Open GTKWave in the background
 echo "Opening GTKWave..."
