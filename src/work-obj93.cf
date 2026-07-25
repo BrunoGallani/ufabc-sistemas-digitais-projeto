@@ -1,0 +1,13 @@
+v 4
+file . "fp_adder_test.vhd" "987af6efeb168ab2b05d01cae80d1d3591879d82" "20260725004936.340":
+  entity fp_adder_test at 1( 0) + 0 on 41;
+  architecture arch of fp_adder_test at 17( 376) + 0 on 42;
+file . "hex_to_sseg.vhd" "7830b73849ecb91c4c93b29757a017b7fda1a4fe" "20260725004936.241":
+  entity hex_to_sseg at 1( 0) + 0 on 37;
+  architecture arch of hex_to_sseg at 11( 220) + 0 on 38;
+file . "fp_adder.vhd" "655ec37180e0ec6eb955e431acdd3d313a551f7e" "20260725004936.196":
+  entity fp_adder at 1( 0) + 0 on 35;
+  architecture arch of fp_adder at 16( 407) + 0 on 36;
+file . "disp_mux.vhd" "c3c7c5e7020dd57c00991581d70125f062c77566" "20260725004936.293":
+  entity disp_mux at 1( 0) + 0 on 39;
+  architecture arch of disp_mux at 13( 309) + 0 on 40;
