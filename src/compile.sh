@@ -14,7 +14,7 @@ ghdl -a hex_to_sseg.vhd
 
 echo "Analyzing disp_mux.vhd..."
 ghdl -a disp_mux.vhd
-
+ 
 # 2. Analyze the top-level design
 echo "Analyzing fp_adder_test.vhd..."
 ghdl -a fp_adder_test.vhd
