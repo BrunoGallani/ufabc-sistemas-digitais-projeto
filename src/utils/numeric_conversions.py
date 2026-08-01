@@ -26,13 +26,17 @@ def normalize_bin_number(bin_number: str) -> str:
 ####### 2. Strings de representação dos números
 
 def get_cabecalho_string(number, tipo):
+
+    if is_fpga_number(number):
+        number = transforma_representacao_hex(number)
+
     return f"------------ TIPOS DE REPRESENTAÇÃO DO NÚMERO '{number}' ({tipo}) ------------\n\n"
 
 def get_string_fpga_number(fpga_number: str) -> str:
     text = get_cabecalho_string(fpga_number, "formato display fpga")
     text += f"* Decimal: {fpga_number_para_decimal(fpga_number)}\n\n"
-    text += f"* Ponto flutuante (13 bits): {bits13_para_decimal(fpga_number)}\n\n"
-    text += f"* Representação no display da placa FPGA: {fpga_number}"
+    text += f"* Ponto flutuante (13 bits): {fpga_number_para_13bits(fpga_number)}\n\n"
+    text += f"* Representação no display da placa FPGA: {transforma_representacao_hex(fpga_number)}"
 
     return text
 
