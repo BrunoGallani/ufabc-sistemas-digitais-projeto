@@ -44,7 +44,7 @@ begin
         );
 
     -- instantiate three instances of hex decoders
-    -- exponent
+    -- exponent -> HEX0
     sseg_unit_0 : entity work.hex_to_sseg
         port map (hex => exp_out, dp => '1', sseg => hex0);
 
@@ -54,7 +54,7 @@ begin
     sseg_unit_1 : entity work.hex_to_sseg
         port map (hex => frac_out(3 downto 0), dp => '1', sseg => hex2);
 
-    -- 4 MSBs of fraction
+    -- 4 MSBs of fraction -> HEX2
     sseg_unit_2 : entity work.hex_to_sseg
         port map (hex => frac_out(7 downto 4), dp => '1', sseg => hex3);
 
