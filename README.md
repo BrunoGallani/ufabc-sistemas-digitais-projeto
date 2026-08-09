@@ -54,25 +54,97 @@ Abaixo, imagens do funcionamento na Placa para 4 casos.
 O vídeo explicativo do funcionamento da placa com um exemplo está disponível no endereço: [link do YouTube ou Drive]
 
 
-*Etapa 4 (considerando qeu a Etapa 4 considera toda a documentação em si)*
-## 5. Diário de Bordo de IA 
-Utilizamos o [ChatGPT/Claude/Gemini] para auxiliar na geração do Testbench e na refatoração do código. Abaixo está a análise crítica do uso da ferramenta.
+*Etapa 4*
+## 5. Diário de Bordo de IA
 
-**Prompts Utilizados:**
-> "Insira aqui o prompt exato que você usou..."
+Foram utilizadas as ferramentas de IA “Claude” e “Gemini” para auxiliar nas seguintes etapas do projeto: extração inicial do código-fonte do livro-texto; geração do testbench; geração de scripts para conversão numérica; validação de resultados obtidos referentes a cálculos numéricos para verificar possíveis erros. Abaixo está a análise crítica do uso das ferramentas em cada etapa:
 
-**O Erro da IA (Alucinação):**
-> Descreva aqui o que a IA errou (ex: tentou usar pinos inexistentes, criou clock em testbench de circuito combinacional, etc).
+---
 
+### 5.1. Extração inicial do código-fonte
 
+A IA Claude foi usada para tratamento e transcrição de textos, com o objetivo de acelerar a captura do código: os blocos de código do livro foram capturados, em seguida enviados para uma IA para transcrever, e tratar o texto. O seguinte prompt foi utilizado:
 
+```
+“A partir do pdf anexo, preciso desses dois códigos no formato VHD. O primeiro (3.19) deve ser nomeado fp_adder.vhd e o segundo (3.20) como fp_adder_test.vhd. Extraia exatamente como está no documento, com a indentação adequada.”
+```
 
-**A Correção Humana:**
-> Como você corrigiu o código gerado para que ele funcionasse na nossa placa e na simulação.
+O resultado obtido foi muito satisfatório, sem alucinações nem erros.
 
+---
+
+### 5.2. Geração do *testbench*
+
+A ferramenta Claude foi utilizada para geração de alguns vetores do *testbench* no estágio inicial do projeto. Posteriormente, foram inseridos outros casos de teste no arquivo. O prompt a seguir foi utilizado:
+
+```
+“Com base no código `fp_adder.vhd` que soma dois valores de ponto flutuante, gere casos de teste no formato de testbench em um arquivo nomeado `tb_fp_adder.vhd`, com intervalos de 20 ns”.
+```
+
+O resultado foi muito bom e auxiliou na compreensão do problema/funcionamento do sistema, com alguns dos vetores gerados utilizados na simulação GTKWave apresentada na seção 2.
+
+---
+
+### 5.3. Geração de scripts para conversão numérica
+
+Foi utilizada a IA Gemini para auxiliar na geração de código para conversões numéricas. O seguinte prompt foi utilizado:
+
+```
+“Ajude a criar um script que faz o seguinte:
+
+Converte um número decimal para de ponto flutuante usando 13 bits, os bits da esquerda para direita funcionam da seguinte forma:
+
+Primeiro ---> sinal (1 = negativo; 0 = positivo)
+
+Próximos oito bits ---> mantissa (vai até 0,99609375, 2^-1 + 2^-2… até 2^-8)
+
+Próximos 4 bits ---> vai até 15, é o expoente, usa base 2
+
+Assim, o número máximo é:
+
+0 11111111 1111 = 32640
+
+Quero um script que converta de decimal para essa representação, e o contrário também“
+```
+
+O output foi muito satisfatório, no entanto, foi gerada uma versão inicial bem básica; dessa forma, o código gerado foi alterado, não corrigido, diversas vezes posteriormente (sem o uso de IA), com o objetivo de atender plenamente às necessidades do projeto.
+
+---
+
+### 5.4. Validação de resultados obtidos referentes a cálculos numéricos para verificar possíveis erros
+
+Apenas para validação externa e de modo a evitar erros humanos na conversão de valores em bases, foi solicitado que a IA Gemini calculasse qual a representação decimal de valores na forma adotada [sinal] 0.[msb_hex][lsb_hex]E[exp_hex]. Para quatro dos cinco valores solicitados, o cálculo foi correto. O prompt utilizado foi:
+
+```
+“Se considerarmos que na representação [sinal] 0.[msb_hex][lsb_hex]E[exp_hex], o caractere E representa uma potência de base 2 (2<sup>x</sup>) e que os valores depois de E representam os bits do expoente x e, ainda, pensando em representação hexadecimal, quais os valores na base decimal de 
+-0,c0Eb
+
+0,dcEf
+
+0,9eEf
+
+0,e3Ed
+
+0,9cEc?”
+```
+
+O erro da IA foi observado no cálculo de $-0,c0Eb$, conforme trecho da resposta a seguir:  
+
+"**-0,c0Eb**
+- **Sinal:** Negativo (-)
+- **Mantissa (0,c0<sub>16</sub>)**:
+12/16 + 0/256 = 0,75 + 0 = 0,75
+- **Expoente (11<sub>2</sub>)**:
+11<sub>2</sub> = 3<sub>10</sub> ⇒ 2<sup>3</sup> = 8
+- **Cálculo**:
+-0,75 * 8 = **-6**"
+
+> CORREÇÃO HUMANA: o expoente não é 11 na base binária, mas sim 11 já na base decimal. Como o único erro relatado acima não se tratava do código, mas sim de um cálculo de verificação, não foi necessário alterar o código.
 
 ## 6. Contribuição dos participantes
-Utilize a taxonomia CRediT, seguem exemplos:
- * [Nome do Aluno 1], Administração do Projeto, Desenvolvimento, implementação e teste de software, Análise Formal
- * [Nome do Aluno 2], Validação de dados e experimentos
- * [Nome do Aluno 3], Redação do manuscrito original, Validação de dados e experimentos
+
+ - **Bruno Augusto Soares Gallani:** Conceituação; Curadoria de dados; Desenvolvimento, implementação e teste de software; Administração do Projeto; Disponibilização de ferramenta; Supervisão; Redação do manuscrito original; Redação - revisão e edição.
+
+- **Rafael de Souza Coelho:** Conceituação; Disponibilização de ferramentas; Desenvolvimento, implementação e teste de software; Redação do manuscrito original; Redação - revisão e edição.
+
+ - **Thiago Alexandre Paiares e Silva:** Conceituação; Curadoria de dados; Análise Formal; Investigação; Metodologia; Disponibilização de ferramentas; Desenvolvimento, implementação e teste de software; Validação de dados e experimentos; Redação do manuscrito original; Redação - revisão e edição.
