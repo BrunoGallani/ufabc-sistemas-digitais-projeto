@@ -9,21 +9,119 @@
 **Data:** 09/08/2026
 
 ---
+
 *Etapa 1*
+
 ## 1. Objetivo do Projeto
 Este projeto adapta o somador de ponto flutuante simplificado (13 bits) do livro-texto FPGA Prototyping by VHDL Examples, de Pong Chu, elaborado originalmente para Xilinx Spartan-3, para a placa Terasic DE10-Lite (MAX 10). O objetivo é demonstrar a síntese lógica e a simulação de hardware usando VHDL, bem como o funcionamento prático da placa.
 
 ## 2. Descrição gráfica do funcionamento do sistema
-Usar os elementos necessários para descrever o fucnionamento, isto é, tabelas verdade, diagramas de estados, etc.
-Usar as variáveis de entrada e saída especificadas no VHDL.
+O sistema funciona como um somador de dois valores na representação de ponto flutuante, com a simplificação adotada pelo livro-texto. Os valores são constituídos por um bit de sinal (1 para negativo e 0 para positivo), oito bits que representam a parte fracionária (0.f) e quatro bits de expoente (X), na forma S **0.**FFFFFFFF**E**XXXX, em que E representa uma potência de base 2. Por exemplo, o valor 0 0.11000110E1000 é a representação de 0,77343 × 2<sup>8</sup> = 198.
 
-O sistema funciona como um somador de dois valores na representação de ponto flutuante, com a simplificação adotada pelo livro-texto. Os valores são constituídos por um bit de sinal (1 para negativo e 0 para positivo), oito bits que representam a parte fracionária (0.f) e quatro bits de expoente (X), na forma S 0.FFFFFFFFEXXXX, em que E representa uma potência de base 2. Por exemplo, o valor 0 0.11000110E1000 é a representação de 0,77343 × 28 = 198.
-Ao receber os dois valores, a função matemática principal fp_adder realiza a ordenação (sort) decrescente (maior para menor; big number e small number), o alinhamento (align) de expoentes, de forma que o expoente do small number deve se igualar ao expoente do big number. Nessa etapa, os bits da parte fracionária do small number são deslocados à direita o tanto quanto for necessário para que os expoentes se igualem. Em seguida, ocorre a soma/subtração (add/sub) de fato, com a operação sendo realizada na parte fracionária, já que os expoentes são iguais. O último passo é a normalização (normalize) do resultado, para que fique na forma normalizada. Pode ser necessário deslocar bits à direita no caso de a soma gerar carry-out, deslocar bits à esquerda caso o resultado tenha zeros à esquerda na parte fracionária ou, ainda, converter o resultado para zero quando o valor é pequeno demais para ser representado.
+Para esse sistema, o autor do livro adotou a representação normalizada, que exige o bit mais significativo (MSB) da parte fracionária (`frac`) sempre igual a 1. Assim, a menor representação absoluta possível (diferente de zero) é 0.10000000E0000 (0,5 × 2<sup>0</sup> = 0,5) e a maior, 0.11111111E1111 (0,99609 × 2<sup>15</sup> = 32640).
 
-Como parte da 
+Ao receber os dois valores, cada um segmentado em `sign` (sinal), `frac` (parte fracionária após o 0.) e `exp` (expoente da potência de base 2), a entidade matemática principal fp_adder realiza a ordenação (*sort*) decrescente (maior para menor; *big number* e *small number*), o alinhamento (*align*) de expoentes, de forma que o expoente do *small number* deve se igualar ao expoente do *big number*. Nessa etapa, os *bits* da parte fracionária do *small number* são deslocados à direita o tanto quanto for necessário para que os expoentes se igualem. Em seguida, ocorre a soma/subtração (*add/sub*) de fato, com a operação sendo realizada na parte fracionária, já que os expoentes são iguais. O último passo é a normalização (*normalize*) do resultado. Eventualmente, pode ser necessário deslocar *bits* à direita no caso de a soma gerar *carry-out*, deslocar *bits* à esquerda caso o resultado tenha zeros à esquerda na parte fracionária ou, ainda, converter o resultado para zero quando o valor é pequeno demais para ser representado na forma adotada.
 
+A primeira etapa da adaptação para a DE10-Lite correspondia à comprovação do funcionamento da parte matemática implementada em `fp_adder.vhd` (listing 3.19 do livro-texto). Para isso, foi necessário elaborar, com auxílio do Claude (detalhes na seção 5), um *testbench* (`tb_fp_adder.vhd`) com seis casos de teste para `fp_adder.vhd`, onde são escolhidos, em cada caso, vetores de `signN`, `fracN`, `expN` (com N sendo 1 ou 2), representando valores representáveis. 
+Os arquivos `tb_fp_adder.vhd` e `fp_adder.vhd` foram compilados utilizando os comandos devidos com GHDL e as formas de onda observadas no GTKWave são as presentes nas imagens a seguir.
+
+![Formas de onda observadas no GTKWave - Primeira imagem](/assets/images/GTKWave_1.png)
+Considerando que, na representação de ponto flutuante adotada, signN é o bit de sinal, fracN são os bits da parte fracionária (após 0.) e expN são os bits do expoente, para o primeiro caso de testes (com valores exibidos no GTKWave em representação hexadecimal), o primeiro número dos testes era composto por sign1 = 0, frac1 = AA (10101010<sub>2</sub>) e exp1 = 8 (1000<sub>2</sub>), o que corresponde a 0 0.10101010E1000 (0,6640625 × 2<sup>8</sup> = 170). Já o segundo valor era 0 0.10000000E1000 (0,5 × 2<sup>8</sup> = 128). 
+Portanto, a soma esperada é 298. O resultado (`_out`) é 0 0.10010101E1001 (0,58203125 × 2<sup>9</sup> = 298), compatível com a soma esperada.
+
+![Formas de onda observadas no GTKWave - Segunda imagem](/assets/images/GTKWave_2.png)
+Para o terceiro caso de teste, o detalhamento dos passos do *simplified floating-point adder* descritos pelo autor estão listados a seguir.
+
+**numbers**
+
+- num1: 0 0.11000000E1010 (0,75 × 2<sup>10</sup> = 768)<br>
+(`sign1` = 0, `frac1` = C0 [11000000] e `exp1` = A [1010])
+
+- num2: 0 0.10000000E1001 (0,5 × 2<sup>9</sup> = 256)<br>
+(`sign2` = 0, `frac2` = 80 [10000000] e `exp2` = 9 [1001])
+
+
+**sorting**
+
+Já estão ordenados, logo:
+
+- *big number*: 0 0.11000000E1010
+
+- *small number*: 0 0.10000000E1001
+
+
+**alignment**
+
+Nessa etapa é necessário igualar o expoente do *small number* ao do *big number* deslocando bits à direita.
+
+- *big number*: 0 0.11000000E1010
+
+- *small number*: 0 0.01000000E1010
+
+**addition**
+
+A soma é de fato realizada nessa etapa.
+
+- Resultado: 0 1.00000000E1010
+
+**normalization**
+
+Como a etapa anterior gerou bit de *carry-out*, será necessário normalizar o resultado com deslocamento à direita.
+
+- final: 0 0.10000000E1011 (0,5 × 2<sup>11</sup> = 1024)<br>
+(`sign_out` = 0, `frac_out` = 80 [10000000] e `exp_out` = B [1011])
+
+O resultado final é, portanto, o esperado (1024 = 768 + 256)
+
+![Formas de onda observadas no GTKWave - Terceira imagem](/assets/images/GTKWave_3.png)
+O penúltimo caso de teste foi elaborado para observar saídas com sinal negativo e possui os passos descritos a seguir.  
+
+**numbers**
+
+num1: 0 0.10100000E0010 (0,625 × 2<sup>2</sup> = 2,5)<br>
+(`sign1` = 0, `frac1` = A0 [10100000] e `exp1` = 2 [0010])
+
+
+num2: 1 0.10000000E0011 (0,5 × 2<sup>3</sup> = 4)<br>
+(`sign2` = 1, `frac2` = 80 [10000000] e `exp2` = 3 [0011])
+
+**sorting**
+
+Necessário efetuar a ordenação:
+
+- *big number*: 1 0.10000000E0011
+
+- *small number*: 0 0.10100000E0010
+
+**alignment**
+
+Nessa etapa é necessário igualar o expoente do *small number* ao do *big number* deslocando bits à direita.
+
+- *big number*: 1 0.10000000E0011
+
+- *small number*: 0 0.01010000E0011
+
+**addition**
+
+A soma é de fato realizada nessa etapa.
+
+- Resultado: 1 0.00110000E0011 (-0,1875 × 2<sup>3</sup> = -1,5)
+
+**normalization**
+
+Como, na etapa anterior, há dois bits `0` à esquerda na parte fracionária, é preciso normalizar. Para isso, os bits são deslocados à esquerda, com o devido ajuste no expoente.
+
+- final: 1 0.11000000E0001 (-0,75 × 2<sup>1</sup> = -1,5)<br>
+(`sign_out` = 1, `frac_out` = C0 [11000000] e `exp_out` = 1 [0001])
+
+O resultado final é, assim, o esperado (-1,5 = 2,5 - 4).
+
+Com os resultados anteriormente exibidos, foi possível analisar que o algoritmo matemático de `fp_adder.vhd` funciona antes de alterar o hardware. 
+
+---
 
 *Etapa 2*
+
 ## 3. Adaptações de Hardware (DE10-Lite)
 Indicar o que a arquitetura original usava e quais mudanças foram feitas para a implementação na placa
 
