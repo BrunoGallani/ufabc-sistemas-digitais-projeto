@@ -1,4 +1,4 @@
-**template-somadorpf-vhdl**
+[**template-somadorpf-vhdl**](https://raw.githubusercontent.com/victorialejandra/template-somadorpf-vhdl/refs/heads/main/README.md)
 
 # Tutorial: Implementação de Somador Ponto Flutuante na DE10-Lite
 
@@ -13,7 +13,7 @@
 *Etapa 1*
 
 ## 1. Objetivo do Projeto
-Este projeto adapta o somador de ponto flutuante simplificado (13 bits) do livro-texto FPGA Prototyping by VHDL Examples, de Pong Chu, elaborado originalmente para Xilinx Spartan-3, para a placa Terasic DE10-Lite (MAX 10). O objetivo é demonstrar a síntese lógica e a simulação de hardware usando VHDL, bem como o funcionamento prático da placa.
+Este projeto adapta o somador de ponto flutuante simplificado (13 bits) do livro-texto [FPGA Prototyping by VHDL Examples](./docs/ebook_FPGA_prototyping_by_vhdl_examples.pdf), de Pong Chu, elaborado originalmente para Xilinx Spartan-3, para a placa Terasic DE10-Lite (MAX 10). O objetivo é demonstrar a síntese lógica e a simulação de hardware usando VHDL, bem como o funcionamento prático da placa.
 
 ## 2. Descrição gráfica do funcionamento do sistema
 O sistema funciona como um somador de dois valores na representação de ponto flutuante, com a simplificação adotada pelo livro-texto. Os valores são constituídos por um bit de sinal (1 para negativo e 0 para positivo), oito bits que representam a parte fracionária (0.f) e quatro bits de expoente (X), na forma S **0.**FFFFFFFF**E**XXXX, em que E representa uma potência de base 2. Por exemplo, o valor 0 0.11000110E1000 é a representação de 0,77343 × 2<sup>8</sup> = 198.
@@ -466,11 +466,10 @@ O vídeo explicativo do funcionamento da placa com um exemplo está disponível 
 ---
 
 *Etapa 4*
+
 ## 5. Diário de Bordo de IA
 
 Foram utilizadas as ferramentas de IA “Claude” e “Gemini” para auxiliar nas seguintes etapas do projeto: extração inicial do código-fonte do livro-texto; geração do testbench; geração de scripts para conversão numérica; validação de resultados obtidos referentes a cálculos numéricos para verificar possíveis erros. Abaixo está a análise crítica do uso das ferramentas em cada etapa:
-
----
 
 ### 5.1. Extração inicial do código-fonte
 
@@ -482,8 +481,6 @@ A IA Claude foi usada para tratamento e transcrição de textos, com o objetivo 
 
 O resultado obtido foi muito satisfatório, sem alucinações nem erros.
 
----
-
 ### 5.2. Geração do *testbench*
 
 A ferramenta Claude foi utilizada para geração de alguns vetores do *testbench* no estágio inicial do projeto. Posteriormente, foram inseridos outros casos de teste no arquivo. O prompt a seguir foi utilizado:
@@ -493,8 +490,6 @@ A ferramenta Claude foi utilizada para geração de alguns vetores do *testbench
 ```
 
 O resultado foi muito bom e auxiliou na compreensão do problema/funcionamento do sistema, com alguns dos vetores gerados utilizados na simulação GTKWave apresentada na seção 2.
-
----
 
 ### 5.3. Geração de scripts para conversão numérica
 
@@ -528,8 +523,6 @@ Para o segundo script de conversão numérica e visualização das possibilidade
 
 O resultado foi um código funcional e matematicamente correto, o que possibilitou seu uso durante o desenvolvimento do projeto pelo grupo. O uso do script facilitou as conversões de decimal em mantissa + expoente e também no projeto de uma máscara de bits adequada.
 
----
-
 ### 5.4. Validação de resultados obtidos referentes a cálculos numéricos para verificar possíveis erros
 
 Apenas para validação externa e de modo a evitar erros humanos na conversão de valores em bases, foi solicitado que a IA Gemini calculasse qual a representação decimal de valores na forma adotada [sinal] 0.[msb_hex][lsb_hex]E[exp_hex]. Para quatro dos cinco valores solicitados, o cálculo foi correto. O prompt utilizado foi:
@@ -562,8 +555,8 @@ O erro da IA foi observado no cálculo de $-0,c0Eb$, conforme trecho da resposta
 
 ## 6. Contribuição dos participantes
 
- - **Bruno Augusto Soares Gallani:** Conceituação; Curadoria de dados; Desenvolvimento, implementação e teste de software; Administração do Projeto; Disponibilização de ferramenta; Supervisão; Redação do manuscrito original; Redação - revisão e edição.
+- **Bruno Augusto Soares Gallani:** Conceituação; Curadoria de dados; Desenvolvimento, implementação e teste de software; Administração do Projeto; Disponibilização de ferramenta; Supervisão; Redação do manuscrito original; Redação - revisão e edição.
 
 - **Rafael de Souza Coelho:** Conceituação; Disponibilização de ferramentas; Desenvolvimento, implementação e teste de software; Redação do manuscrito original; Redação - revisão e edição.
 
- - **Thiago Alexandre Paiares e Silva:** Conceituação; Curadoria de dados; Análise Formal; Investigação; Metodologia; Disponibilização de ferramentas; Desenvolvimento, implementação e teste de software; Validação de dados e experimentos; Redação do manuscrito original; Redação - revisão e edição.
+- **Thiago Alexandre Paiares e Silva:** Conceituação; Curadoria de dados; Análise Formal; Investigação; Metodologia; Disponibilização de ferramentas; Desenvolvimento, implementação e teste de software; Validação de dados e experimentos; Redação do manuscrito original; Redação - revisão e edição.
