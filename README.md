@@ -109,6 +109,14 @@ Quero um script que converta de decimal para essa representação, e o contrári
 
 O output foi muito satisfatório, no entanto, foi gerada uma versão inicial bem básica; dessa forma, o código gerado foi alterado, não corrigido, diversas vezes posteriormente (sem o uso de IA), com o objetivo de atender plenamente às necessidades do projeto.
 
+Para o segundo script de conversão numérica e visualização das possibilidades de números, foi utilizado o prompt:
+
+```
+“Crie um script em Python que, recebendo uma máscara de bits na forma 0.1BBBBBBBEXXXX, indique todas as possibilidades de valores. A representação usada é: após o ponto, uma parte fracionária binária de um decimal binário, ‘E’ indica uma potência de base 2 e X representa os bits do expoente. Crie também um script para que, dado um valor qualquer em decimal, seja retornado um valor de mantissa e de expoente de uma potência de base 2, onde a mantissa deve ser sempre menor que 1.”
+```
+
+O resultado foi um código funcional e matematicamente correto, o que possibilitou seu uso durante o desenvolvimento do projeto pelo grupo. O uso do script facilitou as conversões de decimal em mantissa + expoente e também no projeto de uma máscara de bits adequada.
+
 ---
 
 ### 5.4. Validação de resultados obtidos referentes a cálculos numéricos para verificar possíveis erros
