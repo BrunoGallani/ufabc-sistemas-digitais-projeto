@@ -123,16 +123,99 @@ Com os resultados anteriormente exibidos, foi possível analisar que o algoritmo
 *Etapa 2*
 
 ## 3. Adaptações de Hardware (DE10-Lite)
-Indicar o que a arquitetura original usava e quais mudanças foram feitas para a implementação na placa
 
-**O que mudamos no VHDL original:**
-* Removemos...
-* Roteamos ...
-* Reorganizamos ...
+A implementação sugerida pelo autor da soma dos valores em `fp_adder.vhd` permaneceu inalterada. O código responsável por inserir a lógica matemática de `fp_adder.vhd`na placa é o `fp_adder_test.vhd`. Na arquitetura originalmente desenvolvida para a placa Xilinx Spartan-3, o código presente no Listing 3.20 *Floating-point adder testing circuit* usa artefatos específicos, tais como `clk` (*clock*), `an`, a entidade auxiliar `disp_mux.vhd`, necessária para a multiplexação dos quatro displays de sete segmentos, recebendo os padrões armazenados em `led`, além de 8 *switches* (`sw`) e 4 botões (`btn`).
 
-**Descrição gráfica do sistema**
-* Caso mudar a descrição gráfica feita no item 2, atualizar aqui.
-* Usar as variáveis de entrada e saída especificadas no VHDL.
+Como os displays da Spartan-3 **não** são individualizados, isto é, era possível acionar apenas um dos displays por vez, o código adotava uma lógica de alternar (multiplexar) entre os displays de forma muito rápida pelo *clock* `clk` (sendo necessária multiplexação pela entidade `disp_mux.vhd`), em que o display escolhido era representado por `an` (anodo) de modo que a impressão visual fosse dos quatro simultaneamente acesos.
+
+No caso da DE10-Lite, existem 10 *switches* (`sw`),  2 botões (`key`) e 6 displays **individuais** de sete segmentos (`hex`), o que dispensa a necessidade do `clk` (*clock*), da multiplexação (`disp_mux.vhd`) e de `an`. Cada um dos displays pode receber valores de entrada individualmente e são declarados separadamente no código.
+
+Outra diferença é com relação à nomenclatura dos botões, que na Spartan-3 é `btn`e na DE10-Lite, `key`, conforme o arquivo de especificações `DE10_Lite.qsf`.
+
+Ao analisar a representação de 13 bits adotada (S 0.FFFFFFFFEXXXX), ou ainda mais especificamente, a forma normalizada, S 0.1FFFFFFFEXXXX, é de livre escolha o valor de 12 bits (o de S, os sete LSB da parte fracionária e os quatro do expoente). No entanto, na placa Spartan-3 há limitações para inserir os 12 bits de cada um dos dois valores a serem somados, ou seja, seriam necessários 24 inputs entre botões e *switches*, enquanto a placa possui capacidade para apenas 12 entradas.
+
+Para contornar isso, o autor fixou valores para a maioria dos *bits* de `num1`. No Listing 3.20, são definidos `sign1` como `0`, `exp1` como `1000` e `frac1` como `1[sw1][sw0]10101`, em que os *switches* 1 e 0 definem o valor representado. Ou seja, `num1` é 0 0.1FF10101E1000, com mobilidade apenas em dois bits e, dessa forma, com apenas 4 valores possíveis. Já `num2` é mais flexível, com todos os *bits* (exceto o MSB da parte fracionária que já foi definido como 1 devido à representação normalizada) personalizáveis, sendo `sign2` definido pelo *switch* 7, os quatro *bits* de `exp2` determinados pelos botões e a parte fracionária, `frac2`, composta por `1[sw6][sw5][sw4][sw3][sw2][sw1][sw0]`.
+
+Há, entretanto, uma observação importante. Note que os *switches* 1 e 0 definem *bits* simultaneamente das partes fracionárias de `num1` e `num2`, o que causa interdependência entre os números, reduzindo bastante a flexibilidade de escolha dos valores.
+
+Na adaptação para a DE10-Lite, o grupo escolheu seguir a mesma estratégia do autor na fixação de bits, mas com alterações. No caso dessa placa, também há 12 elementos de entrada, mas são distribuídos em 10 *switches* e 2 botões. Para `num1`, foram definidos `sign1` como `0`, `exp1` como `1[not key1][not key0]1` e a parte fracionária `frac1` como `1[s9][s8][s7]1101`. Logo, a representação de `num1` é 0 0.1FFF1101E1XX1 (isto é, `0 0.1[s9][s8][s7]1101E1[key1][key0]1`), com 32 possibilidades de valores.
+
+As entradas dos botões são interpretadas inversamente pois esse esses inputs são ativos em nível baixo na DE10-Lite. O outro valor, `num2`, tem `sign2` determinado pelo *switch* 5 (`[sw5]`), `exp2` como `1[sw6]00` e a parte fracionária `frac2` como `1[sw4][sw3][sw2][sw1][sw0]10`. A representação de `num2` é S 0.1FFFFF10E1X00 (isto é, `[sw5] 0.1[sw4][sw3][sw2][sw1][sw0]10E1[sw6]00`), com 64 valores absolutos possíveis (ou 128 se considerados os valores opostos).
+
+Logo, o mapeamento dos *inputs* dos *switches* e botões da DE10-Lite para os valores *floating point* é:<br>
+- **num1**: `0 0.1[s9][s8][s7]1101E1[not key1][not key0]1`
+
+- **num2**: `[sw5] 0.1[sw4][sw3][sw2][sw1][sw0]10E1[sw6]00`  
+
+As possibilidades de valores são:
+
+`num1`:<br>
+282, 314, 346, 378, 410, 442, 474, 506, 1128, 1256, 1384, 1512, 1640, 1768, 1896, 2024, 4512, 5024, 5536, 6048, 6560, 7072, 7584, 8096, 18048, 20096, 22144, 24192, 26240, 28288, 30336, 32384
+
+`num2`:<br>
+130, 134, 138, 142, 146, 150, 154, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 202, 206, 210, 214, 218, 222, 226, 230, 234, 238, 242, 246, 250, 254, 2080, 2144, 2208, 2272, 2336, 2400, 2464, 2528, 2592, 2656, 2720, 2784, 2848, 2912, 2976, 3040, 3104, 3168, 3232, 3296, 3360, 3424, 3488, 3552, 3616, 3680, 3744, 3808, 3872, 3936, 4000, 4064
+
+Note que a interdependência de *bits* entre os dois números foi removida ao não utilizar um mesmo *input* (*switch* ou botão) nas duas representações. Assim, apesar de possuir limitações na escolha dos valores devido à fixação dos *bits*, cada um é independente do outro.
+
+Como possuía apenas 4 displays, a exibição do resultado na Spartan-3 foi definida pelo autor como (da esquerda para a direita):
+
+- Display 3 (`led3`): sinal (vazio para positivo e traço para negativo)
+
+- Display 2 (`led2`): 4 bits mais significativos (MSBs) da parte fracionária em hexadecimal (por exemplo, 1010 é exibido como A)
+
+- Display 1 (`led1`): 4 bits menos significativos (LSBs) da parte fracionária em hexadecimal
+
+- Display 0 (`led0`): 4 bits do expoente em hexadecimal
+
+Na adaptação do código para a placa DE10-Lite, o grupo optou por seguir uma lógica semelhante à do autor. Como o resultado é também um número na representação adotada S 0.FFFFFFFFEXXXX, os seis displays da placa exibem, da esquerda para a direita:
+
+- Display 5 (`hex5`): sinal (vazio para positivo e traço para negativo)
+
+- Display 4 (`hex4`): fixo em `0.`
+
+- Display 3 (`hex3`): 4 MSBs da parte fracionária em hexadecimal
+
+- Display 2 (`hex2`): 4 LSBs da parte fracionária em hexadecimal
+
+- Display 1 (`hex1`): fixo em `E`, representando a potência de base 2 (2<sup>x</sup>)
+
+- Display 0 (`hex0`): 4 bits do expoente em hexadecimal
+
+Logo, os displays exibem algo como - 0.31EF, que representa:
+
+> 1 0.00110001E1111 = - ((3 × 16<sup>-1</sup> + 1 × 16<sup>-2</sup>) × 2<sup>15</sup>)
+
+Assim, a informação exibida é a mesma da arquitetura anterior, apenas com os dois displays adicionais aproveitados para melhorar a formatação (exibindo `0.` e `E`).
+
+Como observação, a exibição de cada display é definida por oito bits e não por sete. O MSB indica se o ponto/vírgula é exibido ou não no display, enquanto os 7 LSBs se relacionam de fato com a representação numérica em sete segmentos.
+
+Também foi realizada adaptação no código `hex_to_sseg.vhd`, responsável por definir a sequência de bits (`sseg`) necessária para exibir os valores desejados nos displays. Como foi originalmente escrito para a Spartan-3, cujos displays são ativos em nível alto, foi preciso redefinir os *bits* para o formato da DE10-Lite, com displays ativos em nível baixo. 
+
+Os displays 5 (`hex5`), 4 (`hex4`) e 1 (`hex1`) não utilizaram a entidade `hex_to_sseg.vhd` e tiveram a sequência de bits definida diretamente nas linhas do código `fp_adder_test.vhd` (`hex5` é resultado de um condicional com base no sinal do número).
+
+Abaixo, uma tabela com a sequência de bits necessária para exibir cada dígito nos displays da DE10-Lite, com a representação hexadecimal dessa sequência de bits na última coluna.
+
+| exibição do display |    sequência de bits para o display    | hexadecimal da sequência de bits |
+|:--------:|:---------:|:---:|
+| negativo | 10111111  | BF |
+| vazio    | 11111111  | FF |
+| 0 com ponto  | 01000000  | 40 |
+| 0 sem ponto  | 11000000  | C0 |
+| 1        | 11111001  | F9 |
+| 2        | 10100100  | A4 |
+| 3        | 10110000  | B0 |
+| 4        | 10011001  | 99 |
+| 5        | 10010010  | 92 |
+| 6        | 10000010  | 82 |
+| 7        | 11111000  | F8 |
+| 8        | 10000000  | 80 |
+| 9        | 10010000  | 90 |
+| a        | 10001000  | 88 |
+| b        | 10000011  | 83 |
+| c        | 10100111  | A7 |
+| d        | 10100001  | A1 |
+| e        | 10000110  | 86 |
+| f        | 10001110  | 8E |
 
 ## 4. Evidências de Validação
 
