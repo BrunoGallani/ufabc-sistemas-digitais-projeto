@@ -220,14 +220,239 @@ Abaixo, uma tabela com a sequência de bits necessária para exibir cada dígito
 ## 4. Evidências de Validação
 
 ### Simulação 
-Abaixo, a imagem do funcionamento do 4º estágio (normalização). Considerar os 4 casos detalhados.
+A seguir, imagem do RTL Viewer gerada no Quartus Prime Lite Edition.
 
-![Print das Telas do Simulador com as Formas de Onda](link-da-imagem-aqui.jpg)
+![RTL_Viewer_image](/assets/images/RTL%20Viewer_4.png)
 
-### Código VHDL Final 
+Dentro do Quartus Prime Lite Edition, utilizou-se o simulador Questa Altera Starter FPGA para compilar os testes contidos no arquivo `fp_adder_test.vht` e observar as formas de onda. Esse arquivo contém, para cada caso de teste, as sequências de `sw` e `key`, que correspondem aos inputs da placa DE10-Lite real. 
+
+Por exemplo, considerando as limitações de cada número (`num1` e `num2`) explicadas na seção 3, é possível escolher um dos valores possíveis.
+Escolhendo `num1` = 2024 e `num2` = 210, é necessário convertê-los para a representação adotada.
+
+`num1` = 2024 = 0,98828 × 2<sup>11</sup>
+
+Pelo método das multiplicações sucessivas por 2, convertemos 0,98828 para a representação binária:
+
+- 0,98828 × 2 = **1**,97656
+
+- 0,97656 × 2 = **1**,95312
+
+- 0,95312 × 2 = **1**,90624
+
+- 0,90624 × 2 = **1**,81248
+
+- 0,81248 × 2 = **1**,62496
+
+- 0,62496 × 2 = **1**,24992
+
+- 0,24992 × 2 ≈ **0**,5
+
+- 0,5 × 2 = **1**
+
+Logo, na representação binária, temos:<br>
+> 2024 = 0 0,11111101E1011
+
+Realizando o mesmo procedimento para `num2`,<br>
+`num2` = 210 = 0,82031 × 2<sup>8</sup> = 0 0,11010010E1000
+
+Utilizando o mapeamento de bits descrito na seção 3,<br>
+
+- **num1**: `0 0.1[s9][s8][s7]1101E1[not key1][not key0]1`
+
+- **num2**: `[sw5] 0.1[sw4][sw3][sw2][sw1][sw0]10E1[sw6]00`  
+
+A sequência das chaves e botões da FPGA será:
+`sw  <= "1110010100"` e `key <= "01"` (na simulação `.vht`, como `key` possui lógica inversa, inserimos o valor inverso: `10`).
+
+Compilando o `fp_adder_test.vht` no Questa com essas informações, as formas de onda obtidas apresentaram os valores hexadecimais de cada `hex` correspondentes às sequências de bits necessárias para ativar os displays com o dígito desejado. De acordo com a tabela presente ao final da seção anterior, é possível encontrar qual o dígito cada hexadecimal representa.
+
+![Questa_exemplo_1](/assets/images/questa%20exemplo1_5.png)
+
+|hex5|hex4|hex3|hex2|hex1|hex0|
+|:--:|:--:|:--:|:--:|:--:|:--:|
+|FF  | 40 |  80| 83 | 86 | A7 |
+|    |  0.| 8  |  b | E  | c  |
+
+Logo, o resultado foi 0,8bEc, o que equivale a:<br>
+> (8 × 16<sup>-1</sup> + 11 × 16<sup>-2</sup>) × 2<sup>12</sup> = 2224.
+
+O valor final, 2224, é muito próximo ao esperado, 2234 (2024 + 210). Esse erro de precisão é compreensível e aceitável, haja vista a perda de bits que pode ocorrer nos truncamentos/deslocamentos de bits à esquerda ou à direita no alinhamento e normalização das partes fracionárias com 8 bits.
+
+Mais um exemplo possível é `num1` = 506 e `num2` = -2144.<br>
+Executando os mesmos procedimentos do caso anterior, teremos:
+- `num1` = 506 = 0,98828 × 2<sup>9</sup> = 0 0.11111101E1001
+
+- `num2`= -2144 = -0,52343 × 2<sup>12</sup> = 1 0.10000110E1100
+
+Mapeando para os inputs da FPGA, `sw  <= "1111100001"` e `key <= "00"`(pela lógica inversa, consta como `11` no `.vht`). A saída da simulação no Questa consta a seguir.
+
+![Questa_exemplo_2](/assets/images/questa%20exemplo2_6.png)
+
+|hex5|hex4|hex3|hex2|hex1|hex0|
+|:--:|:--:|:--:|:--:|:--:|:--:|
+|BF  | 40 |  A7| 86 | 86 | 83 |
+| -  |  0.| c  |  e | E  | b  |
+
+Assim, o resultado foi -0,ceEb, que equivale a:
+> \- ((12 × 16<sup>-1</sup> + 14 × 16<sup>-2</sup>) × 2<sup>11</sup>) = -1648
+
+O valor esperado era -1638, novamente muito próximo do valor obtido pelo sistema.
+
+Na arquitetura adotada pelo grupo, o *switch* 5 (`[sw5]`) é responsável pelo sinal de `num2`. Basta, então, alterar o valor desse bit na sequência `sw` para observar qual seria o resultado da soma 506 + 2144. Mapeando, `sw  <= "1111000001"` e `key <= "00"`(pela lógica inversa, consta como `11` no `.vht`). O Questa exibe o seguinte resultado:
+
+![Questa_exemplo_3](/assets/images/questa%20exemplo3_7.png)
+
+|hex5|hex4|hex3|hex2|hex1|hex0|
+|:--:|:--:|:--:|:--:|:--:|:--:|
+|FF  | 40 |  88| 92 | 86 | A7 |
+|   |  0.| a  |  5 | E  | c  |
+
+O resultado 0,a5Ec é (10 × 16<sup>-1</sup> + 5 × 16<sup>-2</sup>) × 2<sup>12</sup>) = 2640, em linha com o esperado, 2650.
+
+A simulação completa, com todos os outros casos de teste utilizados em `fp_adder_test.vht` consta a seguir.
+
+![Questa_todos_exemplos](/assets/images/questa%20todos_exemplos_8.png)
+
+### Código VHDL Final
+
+A seguir, o código VHDL da entidade principal `fp_adder_test.vhd` na última versão utilizada no carregamento da placa na apresentação para a docente. Os outros códigos VHDL utilizados na compilação do projeto no Quartus estão disponíveis na pasta [`src`](/src/) do presente repositório.
+
 ```vhdl
--- Insira aqui o VHDL final e faça ênfase nos trechos de código mais importantes da sua adaptação, isto é, eles devem estar claramente identificados.
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library work;
+use work.all;
+
+entity fp_adder_test is
+    port (
+        sw : in  std_logic_vector(9 downto 0);  -- os switches
+        key : in  std_logic_vector(1 downto 0);  -- as chaves
+        hex0 : out std_logic_vector(7 downto 0);  -- display expoente do resultado
+        hex1 : out std_logic_vector(7 downto 0);  -- display letra E fixa
+        hex2 : out std_logic_vector(7 downto 0);  -- display fracao, 4 LSBs
+        hex3 : out std_logic_vector(7 downto 0);  -- display fracao, 4 MSBs
+		  hex4 : out std_logic_vector(7 downto 0);  -- display digito zero
+        hex5 : out std_logic_vector(7 downto 0)   -- display sinal do resultado
+    );
+end fp_adder_test;
+
+architecture arch of fp_adder_test is
+    signal sign1, sign2 : std_logic;
+    signal exp1, exp2 : std_logic_vector(3 downto 0);
+    signal frac1, frac2 : std_logic_vector(7 downto 0);
+    signal sign_out : std_logic;
+    signal exp_out : std_logic_vector(3 downto 0);
+    signal frac_out : std_logic_vector(7 downto 0); 
+begin
+    -- set up the fp adder input signals
+    -- ================================
+    -- Adaptacao dos bits dos numeros
+    -- ================================
+    --  os inputs foram reorganizados para se adequar as limitacoes da DE10 lite, gerando uma nova mascara de bits
+    -- os bits variaveis de num1 usam os dois botoes key e os switches 9 a 7
+    -- os bits variaveis de num2 usam os switches 6 a 0
+    -- uma relevante adaptacao da versao Spartan eh a eliminacao do compartilhamento de inputs entre os numeros, o que elimina a interdependencia original entre os bits de num1 e num2
+    sign1 <= '0';
+    exp1  <= '1' & (not key(1)) & (not key(0)) & '1'; --como os botoes da DE10 lite sao ativos em nivel baixo, eh necessario inverter os valores de entrada para formar os bits do expoente de num1
+    frac1 <= '1' & sw(9 downto 7) & "1101";            
+
+    sign2 <= sw(5);                                    
+    exp2  <= '1' & sw(6) & "00";                     
+    frac2 <= '1' & sw(4 downto 0) & "10";      
+
+    -- instantiate fp adder
+    -- set up the fp adder input signals
+    -- ================================
+    -- FP Adder
+    -- ================================
+    -- esse trecho permaneceu inalterado, pois a logica matematica independe do hardware
+    -- a logica utiliza apenas sign, exp e frac, independentes da parte fisica da placa
+    fp_add_unit : entity work.fp_adder
+        port map (
+            sign1 => sign1, sign2 => sign2, exp1 => exp1, exp2 => exp2,
+            frac1 => frac1, frac2 => frac2,
+            sign_out => sign_out, exp_out => exp_out,
+            frac_out => frac_out
+        );
+
+    -- set up the fp adder input signals
+    -- ================================
+    -- Adaptacao dos displays
+    -- ================================
+    -- uma diferenca significativa entre as versoes pode ser observada aqui
+    -- a DE10 lite possui seis displays de sete segmentos individualmente controlados
+    -- nao eh mais necessario utilizar clock, anodo ou a multiplexacao de disp_mux.vhd, como exigia a arquitetura original da Spartan 3
+    -- alem disso, os displays hex1, hex4 e hex5 possuem a atribuicao da sequencia que ativa o digito desejado de forma direta no codigo
+    -- os dois displays adicionais, que representam explicitamente E e 0., melhoram a apresentacao visual do resultado, sem alterar as informacoes numericas exibidas em relacao a arquitetura original
+    -- os valores numericos que resultam de fp_adder ainda usam hex_to_sseg para definir a sequencia de bits que deve ir para o display, mas os caracteres fixos ou condicionais sao definidos diretamente, como ja mencionado
+    -- o codigo de hex_to_sseg foi alterado para se adequar a logica de ativo em nivel baixo da DE10 lite
+
+    -- instantiate three instances of hex decoders
+    -- exponent -> HEX0
+    sseg_unit_0 : entity work.hex_to_sseg
+        port map (hex => exp_out, dp => '1', sseg => hex0);
+
+	 hex1 <= "10000110"; --caractere E
+		  
+    -- 4 LSBs of fraction
+    sseg_unit_1 : entity work.hex_to_sseg
+        port map (hex => frac_out(3 downto 0), dp => '1', sseg => hex2);
+
+    -- 4 MSBs of fraction -> HEX3
+    sseg_unit_2 : entity work.hex_to_sseg
+        port map (hex => frac_out(7 downto 4), dp => '1', sseg => hex3);
+
+	 hex4 <= "01000000"; --zero com o ponto
+	
+    -- quando sign eh 1, ou seja, o valor eh negativo, o traco deve ser exibido
+    -- para isso, uma atribuicao condicional eh utilizada nesse trecho	  
+    -- sign 
+    hex5 <= "10111111" when sign_out = '1' else --negativo
+            "11111111"; -- apagado (positivo)
+end arch;
 ```
+
+A seguir, o código de `hex_to_sseg.vhd`, com o respectivo comentário.
+
+```vhdl
+library ieee;
+use ieee.std_logic_1164.all;
+entity hex_to_sseg is
+    port (
+        hex: in std_logic_vector(3 downto 0);
+        dp: in std_logic;
+        sseg: out std_logic_vector(7 downto 0)
+    );
+end hex_to_sseg;
+
+-- todas as sequencias de sete bits foram adaptadas para contemplar a logica de ativo em nivel baixo da de10 lite
+architecture arch of hex_to_sseg is
+begin
+    with hex select
+        sseg(6 downto 0) <=
+            "1000000" when "0000",
+            "1111001" when "0001",
+            "0100100" when "0010",
+            "0110000" when "0011",
+            "0011001" when "0100",
+            "0010010" when "0101",
+            "0000010" when "0110",
+            "1111000" when "0111",
+            "0000000" when "1000",
+            "0010000" when "1001",
+            "0001000" when "1010", --a
+            "0000011" when "1011", --b
+            "0100111" when "1100", --c
+            "0100001" when "1101", --d
+            "0000110" when "1110", --e
+            "0001110" when others; --f
+    sseg(7) <= dp;
+end arch;
+```
+
+---
+
 *Etapa 3*
 
 ### Funcionamento na Placa
