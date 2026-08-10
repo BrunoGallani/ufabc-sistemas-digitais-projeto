@@ -16,7 +16,7 @@
 Este projeto adapta o somador de ponto flutuante simplificado (13 bits) do livro-texto [FPGA Prototyping by VHDL Examples](./docs/ebook_FPGA_prototyping_by_vhdl_examples.pdf), de Pong Chu, elaborado originalmente para Xilinx Spartan-3, para a placa Terasic DE10-Lite (MAX 10). O objetivo é demonstrar a síntese lógica e a simulação de hardware usando VHDL, bem como o funcionamento prático da placa.
 
 ## 2. Descrição gráfica do funcionamento do sistema
-O sistema funciona como um somador de dois valores na representação de ponto flutuante, com a simplificação adotada pelo livro-texto. Os valores são constituídos por um bit de sinal (1 para negativo e 0 para positivo), oito bits que representam a parte fracionária (0.f) e quatro bits de expoente (X), na forma S **0.**FFFFFFFF**E**XXXX, em que E representa uma potência de base 2. Por exemplo, o valor 0 0.11000110E1000 é a representação de 0,77343 × 2<sup>8</sup> = 198.
+O sistema funciona como um somador de dois valores na representação de ponto flutuante, com a simplificação adotada pelo livro-texto. Os valores são constituídos por um bit de sinal (1 para negativo e 0 para positivo), oito bits que representam a parte fracionária (0.f) e quatro bits de expoente (X), na forma S <b>0.</b>FFFFFFFF<b>E</b>XXXX, em que E representa uma potência de base 2. Por exemplo, o valor 0 0.11000110E1000 é a representação de 0,77343 × 2<sup>8</sup> = 198.
 
 Para esse sistema, o autor do livro adotou a representação normalizada, que exige o bit mais significativo (MSB) da parte fracionária (`frac`) sempre igual a 1. Assim, a menor representação absoluta possível (diferente de zero) é 0.10000000E0000 (0,5 × 2<sup>0</sup> = 0,5) e a maior, 0.11111111E1111 (0,99609 × 2<sup>15</sup> = 32640).
 
