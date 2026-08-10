@@ -456,9 +456,14 @@ end arch;
 *Etapa 3*
 
 ### Funcionamento na Placa
-Abaixo, imagens do funcionamento na Placa para 4 casos.
-O vídeo explicativo do funcionamento da placa com um exemplo está disponível no endereço: [link do YouTube ou Drive]
 
+O vídeo explicativo do funcionamento da placa com um exemplo está disponível nos seguintes endereços:
+
+- **YouTube:** https://youtu.be/EKasa-b7qYc
+
+- **Google Drive (proporção original):** https://drive.google.com/file/d/1Y5V62T0NyBKlgANrjc549bCeaxGeJ3ME/view?usp=drive_link
+
+---
 
 *Etapa 4*
 ## 5. Diário de Bordo de IA
